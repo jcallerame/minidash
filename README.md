@@ -1,2 +1,2 @@
 # minidash
-General-purpose Javascript library similar to lodash, but with smaller footprint
+General-purpose Javascript library similar to lodash, but with smaller footprint.
