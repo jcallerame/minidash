@@ -16,8 +16,6 @@ export const minBy = (list, func) => {
 };
 
 export const multiGroupBy = (array, groups) => {
-	console.log('In multiGroupBy().');
-	console.log('group types:', groups.map(group => typeof group));
 	const groupFuncs = groups.map(group =>
 		typeof group === 'string' ? obj => obj[group] : group
 	);
@@ -112,7 +110,6 @@ const makeObj = array => {
 };
 
 export const uniq = list => {
-	console.log('In uniq.');
 	let set = {};
 	let result = [];
 	for (const item of list) {
@@ -182,15 +179,11 @@ export const contains = (arr, pItem) => {
 export const equals = (obj1, obj2) => {
 	for (const p in obj1) {
 		if (obj2 == null || !(p in obj2)) {
-			console.log(`equals(): obj2 == null || ${p} not in obj2`);
 			return false;
 		}
 		switch (typeof obj1[p]) {
 			case 'object':
 				if (!equals(obj1[p], obj2[p])) {
-					console.log(
-						`equals(): Object property ${p} not equal in the two objects.`
-					);
 					return false;
 				}
 				break;
@@ -199,20 +192,17 @@ export const equals = (obj1, obj2) => {
 					typeof obj2[p] !== 'function' ||
 					obj1[p].toString() != obj2[p].toString()
 				) {
-					console.log(`equals(): function ${p} not equal in the two objects.`);
 					return false;
 				}
 				break;
 			default:
 				if (obj1[p] !== obj2[p]) {
-					console.log(`Regular property ${p} not equal in the two objects.`);
 					return false;
 				}
 		}
 	}
 	for (const p in obj2) {
 		if (obj1 == null || !(p in obj1)) {
-			console.log(`Property ${p} in obj2 but not in obj1.`);
 			return false;
 		}
 	}
