@@ -2,8 +2,11 @@ const reSubprops = /^(.*?)\[(['"]?)(.*?)\2\]$/;
 
 export const isArray = Array.isArray;
 
-export const map = (array, func, thisArg) => 
-	Array.prototype.map.call(array, func, thisArg);
+export const map = Array.prototype.map.call.bind(Array.prototype.map);
+export const reduce = Array.prototype.reduce.call.bind(Array.prototype.reduce);
+export const filter = Array.prototype.filter.call.bind(Array.prototype.filter);
+export const some = Array.prototype.some.call.bind(Array.prototype.some);
+export const every = Array.prototype.every.call.bind(Array.prototype);
 
 // Returns the element with the minimum value of the given function called on that element.
 // Similar to lodash minBy function.
@@ -54,14 +57,17 @@ export const keyBy = (array, group) => {
 	return result;
 };
 
-export const filter = (list, predicate) => {
-	let result = [];
-	for (const item of list) {
-		if (predicate(item)) {
-			result.push(item);
-		}
-	}
-	return result;
+export const sum = array => {
+	return array.reduce((acc, val = 0) => acc + val);
+};
+
+export const sumBy = (array, iteratee) => {
+	const func = typeof iteratee === 'string' ? 
+		obj => obj[iteratee] : iteratee;
+	return array.reduce((acc, val) => {
+		const result = func(val);
+		return result === undefined ? acc : acc + result;
+	});
 };
 
 const _flatten2 = (obj, array) => {
@@ -160,6 +166,14 @@ export const sortBy = (list, func, ...moreFuncs) => {
 		return 0;
 	});
 	return objsToSort.map(obj => obj.value);
+};
+
+export const reverse = array => {
+	let result = [];
+	for (let i = array.length - 1; i >= 0; i--) {
+		result.push(array[i]);
+	}
+	return result;
 };
 
 // Object.values doesn't work in Tizen web widget or Tizen 3.0 web app.
