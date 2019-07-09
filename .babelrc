@@ -4,6 +4,7 @@
       "@babel/preset-env",
       {
         "useBuiltIns": "entry",
+        "corejs": "core-js@3",
         "modules": false
       }
     ]

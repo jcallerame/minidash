@@ -1,5 +1,10 @@
 const reSubprops = /^(.*?)\[(['"]?)(.*?)\2\]$/;
 
+export const isArray = Array.isArray;
+
+export const map = (array, func, thisArg) => 
+	Array.prototype.map.call(array, func, thisArg);
+
 // Returns the element with the minimum value of the given function called on that element.
 // Similar to lodash minBy function.
 export const minBy = (list, func) => {
@@ -61,7 +66,9 @@ export const filter = (list, predicate) => {
 
 const _flatten2 = (obj, array) => {
 	for (const item of array) {
-		if (Array.isArray(item) || item instanceof HTMLCollection) {
+		if (isArray(item) || 
+				item instanceof HTMLCollection || 
+				item instanceof NodeList) {
 			_flatten2(obj, item);
 		} else {
 			obj.push(item);
@@ -75,15 +82,12 @@ export const flatten = array => {
 	return result;
 };
 
-/*
-export const flattenDepth1 = array =>
-	array.reduce((acc, val) => acc.concat(val), []);
-*/
-
 export const flattenDepth1 = list => {
 	let result = [];
 	for (const item of list) {
-		if (Array.isArray(item) || item instanceof HTMLCollection) {
+		if (isArray(item) || 
+				item instanceof HTMLCollection ||
+				item instanceof NodeList) {
 			for (const item2 of item) {
 				result.push(item2);
 			}
@@ -143,7 +147,7 @@ export const difference = (list1, list2) => {
 };
 
 export const sortBy = (list, func, ...moreFuncs) => {
-	const objsToSort = list.map(item => ({ value: item, result: func(item) }));
+	const objsToSort = map(list, item => ({ value: item, result: func(item) }));
 	objsToSort.sort((a, b) => {
 		if (a.result < b.result) return -1;
 		if (a.result > b.result) return 1;
@@ -216,7 +220,7 @@ export const isObject = val => {
 export const get = (obj, path, defaultValue) => {
 	if (obj == null) return defaultValue;
 	if (path == null) return obj;
-	if (!Array.isArray(path)) {
+	if (!isArray(path)) {
 		path = path.split('.');
 		for (let i = path.length - 1; i >= 0; i--) {
 			for (;;) {
