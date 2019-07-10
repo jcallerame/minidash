@@ -14,10 +14,16 @@ export const filter = Array.prototype.filter.call.bind(Array.prototype.filter);
 export const some = Array.prototype.some.call.bind(Array.prototype.some);
 export const every = Array.prototype.every.call.bind(Array.prototype);
 export const concat = Array.prototype.concat.call.bind(Array.prototype.concat);
+export const forEach = Array.prototype.forEach.call.bind(Array.prototype.forEach);
 
-// Returns the element with the minimum value of the given function called on that element.
+const getIterateeFunc = iteratee => {
+	return isString(iteratee) ? obj => obj[iteratee] : iteratee;
+};
+
+// Returns the element with the minimum value of the given iteratee for that element.
 // Similar to lodash minBy function.
-export const minBy = (list, func) => {
+export const minBy = (list, iteratee) => {
+	const func = getIterateeFunc(iteratee);
 	let min = null;
 	let minElem = undefined;
 	for (const elem of list) {
@@ -30,9 +36,23 @@ export const minBy = (list, func) => {
 	return minElem;
 };
 
+export const maxBy = (list, iteratee) => {
+	const func = getIterateeFunc(iteratee);
+	let max = null;
+	let maxElem = undefined;
+	for (const elem of list) {
+		const val = func(elem);
+		if (max === null || val > max) {
+			max = val;
+			maxElem = elem;
+		}
+	}
+	return maxElem;
+};
+
 export const multiGroupBy = (array, groups) => {
 	const groupFuncs = groups.map(group =>
-		typeof group === 'string' ? obj => obj[group] : group
+		getIterateeFunc(group)
 	);
 	let result = {};
 	for (const item of array) {
@@ -54,11 +74,11 @@ export const multiGroupBy = (array, groups) => {
 
 export const groupBy = (array, group) => multiGroupBy(array, [group]);
 
-export const keyBy = (array, group) => {
-	const groupFunc = typeof group === 'string' ? obj => obj[group] : group;
+export const keyBy = (array, iteratee) => {
+	const func = getIterateeFunc(iteratee);
 	let result = {};
 	for (const item of array) {
-		let key = groupFunc(item);
+		let key = func(item);
 		result[key] = item;
 	}
 	return result;
@@ -69,8 +89,7 @@ export const sum = array => {
 };
 
 export const sumBy = (array, iteratee) => {
-	const func = typeof iteratee === 'string' ? 
-		obj => obj[iteratee] : iteratee;
+	const func = getIterateeFunc(iteratee);
 	return array.reduce((acc, val) => {
 		const result = func(val);
 		return result === undefined ? acc : acc + result;
