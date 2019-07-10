@@ -164,6 +164,17 @@ export const pullAll = (array, values) => {
 
 export const pull = (array, ...values) => pullAll(array, values);
 
+export const without = (array, ...values) => {
+	const set = makeObj(values);
+	const result = [];
+	for (const item of array) {
+		if (!(item in set)) {
+			result.push(item);
+		}
+	}
+	return result;
+};
+
 // Remove (and return) elements from array for which predicate returns
 // a truthy value.
 export const remove = (array, predicate = identity) => {
