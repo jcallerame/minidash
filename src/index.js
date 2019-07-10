@@ -322,3 +322,7 @@ export const get = (obj, path, defaultValue) => {
 	}
 	return currObj;
 };
+
+// Return a new string which is the given string with the first letter capitalized.
+// This function leaves the original string unchanged.
+export const capitalize = str => str.charAt(0).toUpperCase() + str.substring(1);
