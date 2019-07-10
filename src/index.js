@@ -7,6 +7,7 @@ export const isString = x => toString.call(x) === '[object String]';
 export const isFunction = x => toString.call(x) === '[object Function]';
 export const isDate = x => toString.call(x) === '[object Date]';
 export const isError = x => toString.call(x) === '[object Error]';
+export const isNaN = x => isNumber(x) && isNaN(x);
 export const isArray = Array.isArray;
 export const map = Array.prototype.map.call.bind(Array.prototype.map);
 export const reduce = Array.prototype.reduce.call.bind(Array.prototype.reduce);
