@@ -90,10 +90,7 @@ export const sum = array => {
 
 export const sumBy = (array, iteratee) => {
 	const func = getIterateeFunc(iteratee);
-	return array.reduce((acc, val) => {
-		const result = func(val);
-		return result === undefined ? acc : acc + result;
-	});
+	return sum(map(array, func));
 };
 
 const _flatten2 = (obj, array) => {
@@ -218,7 +215,7 @@ export const chunk = (array, size = 1) => {
 	}
 	const result = [];
 	for (let i = 0; i < array.length; i += size) {
-		result.push(array.slice(i, size));
+		result.push(array.slice(i, i + size));
 	}
 	return result;
 };
@@ -256,22 +253,9 @@ export const reverse = array => {
 };
 
 // Object.values doesn't work in Tizen web widget or Tizen 3.0 web app.
-export const objectValues = obj => {
-	let result = [];
-	for (const key of Object.keys(obj)) {
-		result.push(obj[key]);
-	}
-	return result;
-};
+export const objectValues = obj => Object.keys(obj).map(key => obj[key]);
 
-export const contains = (arr, pItem) => {
-	for (const item of arr) {
-		if (item === pItem) {
-			return true;
-		}
-	}
-	return false;
-};
+export const contains = (arr, pItem) => some(arr, item => item === pItem);
 
 export const equals = (obj1, obj2) => {
 	for (const p in obj1) {
