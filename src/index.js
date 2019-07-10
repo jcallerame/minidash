@@ -1,6 +1,12 @@
 const reSubprops = /^(.*?)\[(['"]?)(.*?)\2\]$/;
 
 export const identity = x => x;
+export const isNil = x => x == null;
+export const isNumber = x => toString.call(x) === '[object Number]';
+export const isString = x => toString.call(x) === '[object String]';
+export const isFunction = x => toString.call(x) === '[object Function]';
+export const isDate = x => toString.call(x) === '[object Date]';
+export const isError = x => toString.call(x) === '[object Error]';
 export const isArray = Array.isArray;
 export const map = Array.prototype.map.call.bind(Array.prototype.map);
 export const reduce = Array.prototype.reduce.call.bind(Array.prototype.reduce);
@@ -183,6 +189,17 @@ export const remove = (array, predicate = identity) => {
 		if (predicate(array[i])) {
 			result.unshift(array.splice(i, 1));
 		}
+	}
+	return result;
+};
+
+export const chunk = (array, size = 1) => {
+	if (size < 1) {
+		throw new Error('chunk(): size argument must be at least 1.');
+	}
+	const result = [];
+	for (let i = 0; i < array.length; i += size) {
+		result.push(array.slice(i, size));
 	}
 	return result;
 };
