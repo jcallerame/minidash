@@ -1,12 +1,13 @@
 const reSubprops = /^(.*?)\[(['"]?)(.*?)\2\]$/;
 
+export const identity = x => x;
 export const isArray = Array.isArray;
-
 export const map = Array.prototype.map.call.bind(Array.prototype.map);
 export const reduce = Array.prototype.reduce.call.bind(Array.prototype.reduce);
 export const filter = Array.prototype.filter.call.bind(Array.prototype.filter);
 export const some = Array.prototype.some.call.bind(Array.prototype.some);
 export const every = Array.prototype.every.call.bind(Array.prototype);
+export const concat = Array.prototype.concat.call.bind(Array.prototype.concat);
 
 // Returns the element with the minimum value of the given function called on that element.
 // Similar to lodash minBy function.
@@ -152,6 +153,29 @@ export const difference = (list1, list2) => {
 	return filter(list1, item => !(item in set));
 };
 
+export const pullAll = (array, values) => {
+	const set = makeObj(values);
+	for (let i = array.length - 1; i >= 0; i--) {
+		if (array[i] in set) {
+			array.splice(i, 1);
+		}
+	}
+};
+
+export const pull = (array, ...values) => pullAll(array, values);
+
+// Remove (and return) elements from array for which predicate returns
+// a truthy value.
+export const remove = (array, predicate = identity) => {
+	const result = [];
+	for (let i = array.length - 1; i >= 0; i--) {
+		if (predicate(array[i])) {
+			result.unshift(array.splice(i, 1));
+		}
+	}
+	return result;
+};
+
 export const sortBy = (list, func, ...moreFuncs) => {
 	const objsToSort = map(list, item => ({ value: item, result: func(item) }));
 	objsToSort.sort((a, b) => {
@@ -166,6 +190,14 @@ export const sortBy = (list, func, ...moreFuncs) => {
 		return 0;
 	});
 	return objsToSort.map(obj => obj.value);
+};
+
+export const fill = (array, value, start = 0, end = array.length) => {
+	let realStart = start >= 0 ? start : length + start;
+	let realEnd = end >= 0 ? end : length + end;
+	for (let i = realStart; i < realEnd; i++) {
+		array[i] = value;
+	}
 };
 
 export const reverse = array => {
