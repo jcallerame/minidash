@@ -1,3 +1,11 @@
+// Establish the root object, `window` (`self`) in the browser, `global`
+// on the server, or `this` in some virtual machines. We use `self`
+// instead of `window` for `WebWorker` support.
+var root = typeof self == 'object' && self.self === self && self ||
+					typeof global == 'object' && global.global === global && global ||
+					this ||
+					{};
+						
 const reSubprops = /^(.*?)\[(['"]?)(.*?)\2\]$/;
 
 export const identity = x => x;
@@ -7,7 +15,7 @@ export const isString = x => toString.call(x) === '[object String]';
 export const isFunction = x => toString.call(x) === '[object Function]';
 export const isDate = x => toString.call(x) === '[object Date]';
 export const isError = x => toString.call(x) === '[object Error]';
-export const isNaN = x => isNumber(x) && isNaN(x);
+export const isNaN = x => isNumber(x) && root.isNaN(x);
 export const isArray = Array.isArray;
 export const map = Array.prototype.map.call.bind(Array.prototype.map);
 export const reduce = Array.prototype.reduce.call.bind(Array.prototype.reduce);
@@ -86,7 +94,7 @@ export const keyBy = (array, iteratee) => {
 };
 
 export const sum = array => {
-	return array.reduce((acc, val = 0) => acc + val);
+	return reduce(array, (acc, val = 0) => acc + val);
 };
 
 export const sumBy = (array, iteratee) => {
@@ -147,7 +155,7 @@ export const uniq = list => {
 	let set = {};
 	let result = [];
 	for (const item of list) {
-		if (!(item in set)) {
+		if (!(set[item])) {
 			result.push(item);
 			set[item] = true;
 		}
@@ -158,11 +166,10 @@ export const uniq = list => {
 export const uniqBy = (list, iteratee) => {
 	let set = {};
 	let result = [];
-	const predicate =
-		typeof iteratee === 'string' ? obj => obj[iteratee] : iteratee;
+	const func = getIterateeFunc(iteratee);
 	for (const item of list) {
-		const val = predicate(item);
-		if (!(val in set)) {
+		const val = func(item);
+		if (!(set[val])) {
 			result.push(item);
 			set[val] = true;
 		}
@@ -173,13 +180,13 @@ export const uniqBy = (list, iteratee) => {
 // Return all items in list1 that are NOT in list2.
 export const difference = (list1, list2) => {
 	const set = makeObj(list2);
-	return filter(list1, item => !(item in set));
+	return filter(list1, item => !(set[item]));
 };
 
 export const pullAll = (array, values) => {
 	const set = makeObj(values);
 	for (let i = array.length - 1; i >= 0; i--) {
-		if (array[i] in set) {
+		if (set[array[i]]) {
 			array.splice(i, 1);
 		}
 	}
@@ -189,7 +196,7 @@ export const pull = (array, ...values) => pullAll(array, values);
 
 export const without = (array, ...values) => {
 	const set = makeObj(values);
-	return filter(array, item => !(item in set));
+	return filter(array, item => !(set[item]));
 };
 
 // Remove (and return) elements from array for which predicate returns
