@@ -94,6 +94,17 @@ export const keyBy = (array, iteratee) => {
 	return result;
 };
 
+export const countBy = (array, iteratee) => {
+	const func = getIterateeFunc(iteratee);
+	let result = {};
+	for (const item of array) {
+		let key = func(item);
+		const oldCount = result[key];
+		result[key] = (oldCount === undefined) ? 1 : oldCount + 1;
+	}
+	return result;
+};
+
 export const sum = array => {
 	return reduce(array, (acc, val = 0) => acc + val);
 };
