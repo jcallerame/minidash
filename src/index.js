@@ -1,3 +1,4 @@
+/* global global */
 // Establish the root object, `window` (`self`) in the browser, `global`
 // on the server, or `this` in some virtual machines. We use `self`
 // instead of `window` for `WebWorker` support.
@@ -138,6 +139,7 @@ export const flattenDepth1 = list => {
 
 export const isEmpty = obj => {
 	return (
+		obj == null ||
 		(typeof obj === 'object' && Object.keys(obj).length === 0) ||
 		(typeof obj === 'string' && obj.length === 0)
 	);
