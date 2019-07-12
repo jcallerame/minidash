@@ -16,10 +16,10 @@ export const isString = x => toString.call(x) === '[object String]';
 export const isFunction = x => toString.call(x) === '[object Function]';
 export const isDate = x => toString.call(x) === '[object Date]';
 export const isError = x => toString.call(x) === '[object Error]';
-export const isNaN = x => isNumber(x) && root.isNaN(x);
 export const isArray = Array.isArray;
 export const map = Array.prototype.map.call.bind(Array.prototype.map);
 export const reduce = Array.prototype.reduce.call.bind(Array.prototype.reduce);
+export const reduceRight = Array.prototype.reduceRight.call.bind(Array.prototype.reduceRight);
 export const filter = Array.prototype.filter.call.bind(Array.prototype.filter);
 export const some = Array.prototype.some.call.bind(Array.prototype.some);
 export const every = Array.prototype.every.call.bind(Array.prototype);
@@ -27,6 +27,8 @@ export const concat = Array.prototype.concat.call.bind(Array.prototype.concat);
 export const forEach = Array.prototype.forEach.call.bind(Array.prototype.forEach);
 export const indexOf = Array.prototype.indexOf.call.bind(Array.prototype.indexOf);
 export const lastIndexOf = Array.prototype.lastIndexOf.call.bind(Array.prototype.lastIndexOf);
+export const slice = Array.prototype.slice.call.bind(Array.prototype.slice);
+export const reverse = Array.prototype.reverse.call.bind(Array.prototype.reverse);
 export const hasOwnProperty = Object.prototype.hasOwnProperty.call.bind(Object.prototype.hasOwnProperty);
 
 const getIterateeFunc = iteratee => {
@@ -35,7 +37,7 @@ const getIterateeFunc = iteratee => {
 
 // Returns the element with the minimum value of the given iteratee for that element.
 // Similar to lodash minBy function.
-export const minBy = (list, iteratee) => {
+export const minBy = (list, iteratee = identity) => {
 	const func = getIterateeFunc(iteratee);
 	let min = null;
 	let minElem = undefined;
@@ -49,7 +51,7 @@ export const minBy = (list, iteratee) => {
 	return minElem;
 };
 
-export const maxBy = (list, iteratee) => {
+export const maxBy = (list, iteratee = identity) => {
 	const func = getIterateeFunc(iteratee);
 	let max = null;
 	let maxElem = undefined;
@@ -63,7 +65,7 @@ export const maxBy = (list, iteratee) => {
 	return maxElem;
 };
 
-export const multiGroupBy = (array, groups) => {
+export const multiGroupBy = (array, groups = [identity]) => {
 	const groupFuncs = groups.map(group =>
 		getIterateeFunc(group)
 	);
@@ -85,7 +87,7 @@ export const multiGroupBy = (array, groups) => {
 	return result;
 };
 
-export const groupBy = (array, group) => multiGroupBy(array, [group]);
+export const groupBy = (array, group = identity) => multiGroupBy(array, [group]);
 
 export const keyBy = (array, iteratee) => {
 	const func = getIterateeFunc(iteratee);
@@ -97,7 +99,7 @@ export const keyBy = (array, iteratee) => {
 	return result;
 };
 
-export const countBy = (array, iteratee) => {
+export const countBy = (array, iteratee = identity) => {
 	const func = getIterateeFunc(iteratee);
 	let result = {};
 	for (const item of array) {
@@ -112,7 +114,7 @@ export const sum = array => {
 	return reduce(array, (acc, val = 0) => acc + val);
 };
 
-export const sumBy = (array, iteratee) => {
+export const sumBy = (array, iteratee = identity) => {
 	const func = getIterateeFunc(iteratee);
 	return sum(map(array, func));
 };
@@ -200,6 +202,18 @@ export const isEmpty = obj => {
 	);
 };
 
+export const nth = (array, pos) => {
+	return pos >= 0 ? array[pos] : array[array.length - pos];
+};
+
+export const first = array => array[0];
+
+export const rest = array => slice(array, 1);
+
+export const head = (array, n = 1) => slice(array, 0, n);
+
+export const tail = (array, n = 1) => slice(array, -n);
+
 const makeObj = array => {
 	const result = {};
 	for (const item of array) {
@@ -234,10 +248,58 @@ export const uniqBy = (list, iteratee) => {
 	return result;
 };
 
-// Return all items in list1 that are NOT in list2.
-export const difference = (list1, list2) => {
-	const set = makeObj(list2);
+// Return all items in list1 that are NOT in any of the otherLists.
+export const difference = (list1, ...otherLists) => {
+	const set = makeObj(flattenDepth1(otherLists));
 	return filter(list1, item => !(set[item]));
+};
+
+// differenceBy(list1, ...otherLists, [iteratee = identity])
+// Like difference, but compares values by iteratee
+export const differenceBy = (...args) => {
+	const iteratee = isArray(args[args.length - 1]) ? identity : args.pop();
+	const list1 = args.shift();
+	const set = [];
+	for (const list of args) {
+		for (const item of list) {
+			set[iteratee(item)] = true;
+		}
+	}
+	return filter(list1, item => !(set[iteratee(item)]));
+};
+
+export const intersection = (list1, ...otherLists) => {
+	let sets = [];
+	for (const list of otherLists) {
+		sets.push(makeObj(list));
+	}
+	return filter(uniq(list1), item => sets.every(set => set[item]));
+};
+
+export const intersectionBy = (...args) => {
+	const iteratee = isArray(args[args.length - 1]) ? identity : args.pop();
+	let vals = {};
+	for (const list of args) {
+		for (const item of list) {
+			if (!(item in vals)) {
+				vals[item] = iteratee(item);
+			}
+		}
+	}
+	let sets = [];
+	const list1 = args.shift();
+	for (const list of args) {
+		sets.push(makeObj(map(list, item => vals[item])));
+	}
+	return filter(uniqBy(list1, item => vals[item]), 
+		item => sets.every(set => set[vals[item]]));
+};
+
+export const union = (...lists) => uniq(flattenDepth1(lists));
+
+export const unionBy = (...args) => {
+	const iteratee = isArray(args[args.length - 1]) ? identity : args.pop();
+	return uniqBy(flattenDepth1(args), iteratee);
 };
 
 export const pullAll = (array, values) => {
@@ -301,14 +363,6 @@ export const fill = (array, value, start = 0, end = array.length) => {
 	for (let i = realStart; i < realEnd; i++) {
 		array[i] = value;
 	}
-};
-
-export const reverse = array => {
-	let result = [];
-	for (let i = array.length - 1; i >= 0; i--) {
-		result.push(array[i]);
-	}
-	return result;
 };
 
 // Object.values doesn't work in Tizen web widget or Tizen 3.0 web app.
@@ -385,6 +439,24 @@ export const get = (obj, path, defaultValue) => {
 	return currObj;
 };
 
+export const invert = obj => {
+	let result = {};
+	for (const key of Object.keys(obj)) {
+		const val = obj[key];
+		result[val] = key;
+	}
+	return result;
+};
+
 // Return a new string which is the given string with the first letter capitalized.
 // This function leaves the original string unchanged.
 export const capitalize = str => str.charAt(0).toUpperCase() + str.substring(1);
+
+export const isFinite = val => isNumber(val) && root.isFinite(val);
+
+export const isInteger = val => {
+	//use our isFinite function
+	return isFinite(val) && Math.floor(val) === val;
+};
+
+export const isNaN = x => isNumber(x) && root.isNaN(x);
