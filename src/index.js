@@ -29,6 +29,7 @@ export const indexOf = Array.prototype.indexOf.call.bind(Array.prototype.indexOf
 export const lastIndexOf = Array.prototype.lastIndexOf.call.bind(Array.prototype.lastIndexOf);
 export const slice = Array.prototype.slice.call.bind(Array.prototype.slice);
 export const reverse = Array.prototype.reverse.call.bind(Array.prototype.reverse);
+export const join = Array.prototype.join.call.bind(Array.prototype.join);
 export const hasOwnProperty = Object.prototype.hasOwnProperty.call.bind(Object.prototype.hasOwnProperty);
 
 const getIterateeFunc = iteratee => {
@@ -313,6 +314,13 @@ export const pullAll = (array, values) => {
 
 export const pull = (array, ...values) => pullAll(array, values);
 
+export const pullAt = (array, ...rest) => {
+	const sortedIndexes = flattenDepth1(rest).sort();
+	for (let i = sortedIndexes.length - 1; i >=0; i--) {
+		array.splice(i, 1);
+	}
+};
+
 export const without = (array, ...values) => {
 	const set = makeObj(values);
 	return filter(array, item => !(set[item]));
@@ -460,3 +468,31 @@ export const isInteger = val => {
 };
 
 export const isNaN = x => isNumber(x) && root.isNaN(x);
+
+export const castArray = x => isArray(x) ? x : [x];
+
+export const mean = array => sum(array) / array.length;
+
+export const meanBy = (array, iteratee = identity) => {
+	return sumBy(array, iteratee) / array.length;
+};
+
+// Returns the closest value to number that's within the inclusive
+// lower and upper bounds.
+export const clamp = (number, lower, upper = 0) => {
+	if (lower > upper) {
+		let tmp = lower;
+		lower = upper;
+		upper = tmp;
+	}
+	let result = number;
+	if (result < lower) result = lower;
+	else if (result > upper) result = upper;
+	return result;
+};
+
+//TODO:
+//inRange
+//random
+//has
+//pick/pluck
