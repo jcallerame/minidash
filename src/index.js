@@ -25,6 +25,9 @@ export const some = Array.prototype.some.call.bind(Array.prototype.some);
 export const every = Array.prototype.every.call.bind(Array.prototype);
 export const concat = Array.prototype.concat.call.bind(Array.prototype.concat);
 export const forEach = Array.prototype.forEach.call.bind(Array.prototype.forEach);
+export const indexOf = Array.prototype.indexOf.call.bind(Array.prototype.indexOf);
+export const lastIndexOf = Array.prototype.lastIndexOf.call.bind(Array.prototype.lastIndexOf);
+export const hasOwnProperty = Object.prototype.hasOwnProperty.call.bind(Object.prototype.hasOwnProperty);
 
 const getIterateeFunc = iteratee => {
 	return isString(iteratee) ? obj => obj[iteratee] : iteratee;
@@ -113,6 +116,47 @@ export const sumBy = (array, iteratee) => {
 	const func = getIterateeFunc(iteratee);
 	return sum(map(array, func));
 };
+
+export const find = (array, predicate = identity, fromIndex = 0) => {
+	for (let idx = fromIndex; idx < array.length; idx++) {
+		const item = array[idx];
+		if (predicate(item, idx, array)) {
+			return item;
+		}
+	}
+	return undefined;
+};
+
+export const findIndex = (array, predicate = identity, fromIndex = 0) => {
+	for (let idx = fromIndex; idx < array.length; idx++) {
+		const item = array[idx];
+		if (predicate(item, idx, array)) {
+			return idx;
+		}
+	}
+	return undefined;
+};
+
+export const findLast = (array, predicate = identity, fromIndex = array.length - 1) => {
+	for (let idx = fromIndex; idx > 0; idx--) {
+		const item = array[idx];
+		if (predicate(item, idx, array)) {
+			return item;
+		}
+	}
+	return undefined;
+};
+
+export const findLastIndex = (array, predicate = identity, fromIndex = array.length - 1) => {
+	for (let idx = fromIndex; idx > 0; idx--) {
+		const item = array[idx];
+		if (predicate(item, idx, array)) {
+			return idx;
+		}
+	}
+	return undefined;
+};
+
 
 const _flatten2 = (obj, array) => {
 	for (const item of array) {

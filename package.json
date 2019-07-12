@@ -1,6 +1,6 @@
 {
   "name": "minidash",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "General-purpose library similar to Lodash, but with smaller footprint.",
   "main": "lib/index.js",
   "scripts": {
@@ -14,10 +14,12 @@
   "devDependencies": {
     "@babel/cli": "^7.5.0",
     "@babel/core": "^7.5.0",
+    "@babel/plugin-transform-modules-commonjs": "^7.5.0",
     "@babel/preset-env": "^7.5.0",
     "babel-eslint": "^10.0.2",
     "babel-loader": "^8.0.6",
     "eslint": "^6.0.1",
+    "uglify-js": "^3.6.0",
     "uglifyjs-webpack-plugin": "^2.1.3"
   },
   "dependencies": {
