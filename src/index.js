@@ -8,6 +8,7 @@ var root = typeof self == 'object' && self.self === self && self ||
 					{};
 						
 const reSubprops = /^(.*?)\[(['"]?)(.*?)\2\]$/;
+const nilPathElemErrorStr = 'Path element is null or undefined.';
 
 export const identity = x => x;
 export const isNil = x => x == null;
@@ -160,6 +161,23 @@ export const findLastIndex = (array, predicate = identity, fromIndex = array.len
 	return undefined;
 };
 
+export const reject = (array, predicate = identity) => {
+	let result = [];
+	for (let idx = fromIndex; idx > 0; idx--) {
+		const item = array[idx];
+		if (!predicate(item, idx, array)) {
+			result.push(idx);
+		}
+	}
+	return result;
+};
+
+export const forEachRight = (array, iteratee) => {
+	for (let idx = fromIndex; idx > 0; idx--) {
+		const item = array[idx];
+		iteratee(item, idx, array);
+	}
+};
 
 const _flatten2 = (obj, array) => {
 	for (const item of array) {
@@ -214,6 +232,8 @@ export const rest = array => slice(array, 1);
 export const head = (array, n = 1) => slice(array, 0, n);
 
 export const tail = (array, n = 1) => slice(array, -n);
+
+export const last = array => array[array.length - 1];
 
 const makeObj = array => {
 	const result = {};
@@ -405,34 +425,71 @@ export const isObject = val => {
 	return val !== null && (typeof val === 'object' || typeof val === 'function');
 };
 
-export const get = (obj, path, defaultValue) => {
-	if (obj == null) return defaultValue;
-	if (path == null) return obj;
-	if (!isArray(path)) {
-		path = path.split('.');
-		for (let i = path.length - 1; i >= 0; i--) {
-			for (;;) {
-				const elem = path[i];
-				const match = reSubprops.exec(elem);
-				if (match == null) break;
-				if (match[1] === '') {
-					path.splice(i, 1, match[3]);
-					break;
-				} else {
-					path.splice(i, 1, match[1], match[3]);
-				}
+const getPathArray = path => {
+	if (isArray(path))
+		return path;
+	pathArray = path.split('.');
+	for (let i = pathArray.length - 1; i >= 0; i--) {
+		for (;;) {
+			const elem = pathArray[i];
+			const match = reSubprops.exec(elem);
+			if (match == null) break;
+			if (match[1] === '') {
+				pathArray.splice(i, 1, match[3]);
+				break;
+			} else {
+				pathArray.splice(i, 1, match[1], match[3]);
 			}
 		}
 	}
+	return pathArray;
+}
+
+export const get = (obj, path, defaultValue) => {
+	if (obj == null) return defaultValue;
+	if (path == null) return obj;
+	const pathArray = getPathArray(path);
 	let currObj = obj;
-	for (const elem of path) {
+	for (const elem of pathArray) {
 		if (currObj == null) return defaultValue;
 		if (typeof currObj !== 'object' && typeof currObj !== 'function')
 			throw new Error('get(): Cannot get property of non-object.');
 		if (elem == null)
-			throw new Error('get(): Path element is null or undefined.');
+			throw new Error('get(): ' + nilPathElemErrorStr);
 		if (!(elem in currObj)) return defaultValue;
 		currObj = currObj[elem];
+	}
+	return currObj;
+};
+
+export const hasIn = (obj, path) => {
+	if (obj == null) return false;
+	if (path == null) return true;
+	const pathArray = getPathArray(path);
+	let currObj = obj;
+	for (const elem of pathArray) {
+		if (!isObject(currObj))
+			return false;
+			if (elem == null)
+				throw new Error('hasIn(): ' + nilPathElemErrorStr);
+			if (!(elem in currObj)) return false;
+			currObj = currObj[elem];
+	}
+	return currObj;
+};
+
+export const has = (obj, path) => {
+	if (obj == null) return false;
+	if (path == null) return true;
+	const pathArray = getPathArray(path);
+	let currObj = obj;
+	for (const elem of pathArray) {
+		if (!isObject(currObj))
+			return false;
+			if (elem == null)
+				throw new Error('has(): ' + nilPathElemErrorStr);
+			if (!hasOwnProperty(currObj, elem)) return false;
+			currObj = currObj[elem];
 	}
 	return currObj;
 };
@@ -445,6 +502,29 @@ export const invert = obj => {
 	}
 	return result;
 };
+
+export const clone = value => {
+	if (!isObject(value))
+		return value;
+	const result = isArray(value) ? [] : {};
+	for (const key of Object.keys(value)) {
+		result[key] = value[key];
+	}
+	return result;
+}
+
+export const cloneDeep = value => {
+	if (!isObject(value))
+		return value;
+	const result = isArray(value) ? [] : {};
+	for (const key of Object.keys(value)) {
+		result[key] = cloneDeep(value[key]);
+	}
+	return result;
+}
+
+// export const pick = (obj, paths) => {
+
 
 // Return a new string which is the given string with the first letter capitalized.
 // This function leaves the original string unchanged.
@@ -481,8 +561,28 @@ export const clamp = (number, lower, upper = 0) => {
 	return result;
 };
 
+// Check if numer is between start and end.
+// start = 0 if not supplied.
+// Range is inclusive of start, but exclusive of end.
+export const inRange = (number, start, end = 0) => {
+	if (start > end) {
+		let tmp = start;
+		start = end;
+		end = tmp;
+	}
+	return number >= start && number < end;
+}
+
+export const random = (...args) => {
+	const lastArg = last(args);
+	const floating = isBoolean(lastArg) ? lastArg : true;
+	const upper = (args[1] === undefined) ? 1 : args[1];
+	const lower = (args[0] === undefined) ? 0 : args[0];
+	const rand = Math.random();
+	const scaled = rand * (upper - lower);
+	const shifted = scaled + lower;
+	return floating ? shifted : Math.floor(shifted);
+};
+
 //TODO:
-//inRange
-//random
-//has
 //pick/pluck
