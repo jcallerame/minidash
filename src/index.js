@@ -379,32 +379,22 @@ export const objectValues = obj => Object.keys(obj).map(key => obj[key]);
 export const contains = (arr, pItem) => some(arr, item => item === pItem);
 
 export const equals = (obj1, obj2) => {
+	if (typeof obj1 !== 'object' || typeof obj2 !== 'object') {
+		return obj1 === obj2;
+	}
+	if (toString.call(obj1) !== toString.call(obj2)) {
+		return false;
+	}
 	for (const p in obj1) {
-		if (obj2 == null || !(p in obj2)) {
+		if (!(p in obj2)) {
 			return false;
 		}
-		switch (typeof obj1[p]) {
-			case 'object':
-				if (!equals(obj1[p], obj2[p])) {
-					return false;
-				}
-				break;
-			case 'function':
-				if (
-					typeof obj2[p] !== 'function' ||
-					obj1[p].toString() != obj2[p].toString()
-				) {
-					return false;
-				}
-				break;
-			default:
-				if (obj1[p] !== obj2[p]) {
-					return false;
-				}
+		if (!equals(obj1[p], obj2[p])) {
+			return false;
 		}
 	}
 	for (const p in obj2) {
-		if (obj1 == null || !(p in obj1)) {
+		if (!(p in obj1)) {
 			return false;
 		}
 	}
