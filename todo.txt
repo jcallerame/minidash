@@ -1,0 +1,4 @@
+# Bugs
+- Need to make equals() function handle circular references
+- See if lodash set() distinguishes between number and string array index values
+- Make find functions have optional context argument
