@@ -21,19 +21,22 @@ const dateTag = '[object Date]';
 const errorTag = '[object Error]';
 const symbolTag = '[object Symbol]';
 const regExpTag = '[object RegExp]';
+const arrayTag = '[object Array]';
 const nilPathElemErrorStr = 'Path element is null or undefined.';
+
+const getTag = x => toString.call(x);
 
 export const identity = x => x;
 export const isNil = x => x == null;
-export const isNumber = x => toString.call(x) === numberTag;
-export const isBoolean = x => toString.call(x) === booleanTag;
-export const isString = x => toString.call(x) === stringTag;
-export const isFunction = x => toString.call(x) === functionTag;
-export const isDate = x => toString.call(x) === dateTag;
-export const isError = x => toString.call(x) === errorTag;
-export const isSymbol = x => toString.call(x) === symbolTag;
+export const isNumber = x => getTag(x) === numberTag;
+export const isBoolean = x => getTag(x) === booleanTag;
+export const isString = x => getTag(x) === stringTag;
+export const isFunction = x => getTag(x) === functionTag;
+export const isDate = x => getTag(x) === dateTag;
+export const isError = x => getTag(x) === errorTag;
+export const isSymbol = x => getTag(x) === symbolTag;
 export const isArray = Array.isArray;
-export const isTypedArray = x => reTypedArrayTag.test(toString.call(x));
+export const isTypedArray = x => reTypedArrayTag.test(getTag(x));
 export const map = Array.prototype.map.call.bind(Array.prototype.map);
 export const reduce = Array.prototype.reduce.call.bind(Array.prototype.reduce);
 export const reduceRight = Array.prototype.reduceRight.call.bind(Array.prototype.reduceRight);
@@ -414,39 +417,42 @@ export const objectValues = obj => Object.keys(obj).map(key => obj[key]);
 
 export const contains = (arr, pItem) => some(arr, item => item === pItem);
 
-export const equals = (val1, val2) => {
+export const equals = (a, b) => {
 	if (typeof val1 !== typeof val2) return false;
-	const val1Tag = toString.call(val1);
-	const val2Tag = toString.call(val2);
-	if (val1Tag !== val2Tag) {
+	if (typeof a !== objectType || typeof b !== objectType) {
+		// return true if a === b or if both are NaN, false otherwise
+		return a === a ? a === b : b !== b;
+	}
+	const aTag = getTag(a);
+	const bTag = getTag(b);
+	if (aTag !== bTag) {
 		return false;
 	}
-	switch (val1Tag) {
+	switch (aTag) {
 		case numberTag:
-			return +val1 === +val2 || (root.isNaN(val1) && root.isNaN(val2));
+			return +a === +b || (+a !== +a && +b !== +b); // true if a === b or both are NaN
 		case booleanTag:
 		case dateTag:
-			return +val1 === +val2;
+			return +a === +b;
 		case stringTag:
 		case regExpTag:
 		case errorTag:
-			return '' + val1 === '' + val2;
+			return '' + a === '' + b;
 		case symbolTag:
-			return Symbol.prototype.valueOf.call(val1) === Symbol.prototype.valueOf.call(val2);
+			return Symbol.prototype.valueOf.call(a) === Symbol.prototype.valueOf.call(b);
+		case arrayTag:
+			if (a.length !== b.length) return false;
 	}
-	if (typeof val1 !== objectType || typeof val2 !== objectType) {
-		return val1 === val2;
-	}
-	for (const p in val1) {
-		if (!(p in val2)) {
+	for (const p in a) {
+		if (!(p in b)) {
 			return false;
 		}
-		if (!equals(val1[p], val2[p])) {
+		if (!equals(a[p], b[p])) {
 			return false;
 		}
 	}
-	for (const p in val2) {
-		if (!(p in val1)) {
+	for (const p in b) {
+		if (!(p in a)) {
 			return false;
 		}
 	}
@@ -555,8 +561,88 @@ export const cloneDeep = value => {
 	return result;
 };
 
-// export const pick = (obj, paths) => {
+export const setWith = (obj, path, value, customizer) => {
+	const pathArray = getPathArray(path);
+	let currObj = obj;
+	for (const item of pathArray) {
+		if (currObj[item] == null) {
+			let newObj;
+			if (customizer != null) {
+				newObj = customizer(item);
+			}
+			if (newObj == null) {
+				newObj = isNumber(item) ? new Array(item) : new Object();
+			}
+			currObj[item] = newObj;
+		}
+		currObj = currObj[item];
+	}
+	currObj[pathArray[pathArray.length - 1]] = value;
+	return obj;
+};
 
+export const set = (obj, path, value) => setWith(obj, path, value);
+
+export const pick = (obj, paths) => {
+	let result = isArray(obj) ? [] : {};
+	for (const path of paths) {
+		const pathArray = getPathArray(path);
+		set(result, pathArray, get(obj, pathArray));
+	}
+};
+
+export const pickBy = (obj, predicate = identity) => {
+	let result = isArray(obj) ? [] : {};
+	for (const key of obj) {
+		if (predicate(key, obj)) {
+			result[key] = obj[key];
+		}
+	}
+	return result;
+};
+
+export const omitBy = (obj, predicate = identity) => {
+	let result = isArray(obj) ? [] : {};
+	for (const key of obj) {
+		if (!predicate(key, obj)) {
+			result[key] = obj[key];
+		}
+	}
+	return result;
+};
+
+const arePathArraysEqual = (pathA, pathB) => {
+	if (pathA.length !== pathB.length) return false;
+	for (let i = 0; i < pathA.length; i++) {
+		if (pathA[i].toString() !== pathB[i].toString()) {
+			return false;
+		}
+	}
+	return true;
+};
+
+const _omit2 = (result, obj, currentPath, pathArraysToOmit) => {
+	if (!isObject(obj)) {
+		for (const pathArrayToOmit of pathArraysToOmit) {
+			if (arePathArraysEqual(currentPath, pathArrayToOmit)) {
+				return;
+			}
+		}
+		set(result, currentPath, obj);
+	} else {
+		for (const key of Object.keys(obj)) {
+			let newPath = [...currentPath, key];
+			_omit2(result, obj[key], newPath, pathArraysToOmit);
+		}
+	}
+};
+
+export const omit = (obj, paths) => {
+	let pathArrays = map(paths, getPathArray);
+	const result = isArray(obj) ? [] : {};
+	_omit2(result, obj, [], pathArrays);
+	return result;
+};
 
 // Return a new string which is the given string with the first letter capitalized.
 // This function leaves the original string unchanged.
