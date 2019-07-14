@@ -60,11 +60,11 @@ const getIterateeFunc = iteratee => {
 // Similar to lodash minBy function.
 export const minBy = (list, iteratee = identity) => {
 	const func = getIterateeFunc(iteratee);
-	let min = null;
+	let min = Infinity;
 	let minElem = undefined;
 	for (const elem of list) {
 		const val = func(elem);
-		if (min === null || val < min) {
+		if (val < min) {
 			min = val;
 			minElem = elem;
 		}
@@ -74,11 +74,11 @@ export const minBy = (list, iteratee = identity) => {
 
 export const maxBy = (list, iteratee = identity) => {
 	const func = getIterateeFunc(iteratee);
-	let max = null;
+	let max = -Infinity;
 	let maxElem = undefined;
 	for (const elem of list) {
 		const val = func(elem);
-		if (max === null || val > max) {
+		if (val > max) {
 			max = val;
 			maxElem = elem;
 		}
