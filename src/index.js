@@ -1,23 +1,39 @@
 /* global global */
+
+const objectType = 'object';
+const functionType = 'function';
+
 // Establish the root object, `window` (`self`) in the browser, `global`
 // on the server, or `this` in some virtual machines. We use `self`
 // instead of `window` for `WebWorker` support.
-var root = typeof self == 'object' && self.self === self && self ||
-					typeof global == 'object' && global.global === global && global ||
+var root = typeof self == objectType && self.self === self && self ||
+					typeof global == objectType && global.global === global && global ||
 					this ||
 					{};
 						
 const reSubprops = /^(.*?)\[(['"]?)(.*?)\2\]$/;
+const reTypedArrayTag = /^\[object (?:Float(?:32|64)|(?:Int|Uint)(?:8|16|32)|Uint8Clamped)Array\]$/;
+const numberTag = '[object Number]';
+const booleanTag = '[object Boolean]';
+const stringTag = '[object String]';
+const functionTag = '[object Function]';
+const dateTag = '[object Date]';
+const errorTag = '[object Error]';
+const symbolTag = '[object Symbol]';
+const regExpTag = '[object RegExp]';
 const nilPathElemErrorStr = 'Path element is null or undefined.';
 
 export const identity = x => x;
 export const isNil = x => x == null;
-export const isNumber = x => toString.call(x) === '[object Number]';
-export const isString = x => toString.call(x) === '[object String]';
-export const isFunction = x => toString.call(x) === '[object Function]';
-export const isDate = x => toString.call(x) === '[object Date]';
-export const isError = x => toString.call(x) === '[object Error]';
+export const isNumber = x => toString.call(x) === numberTag;
+export const isBoolean = x => toString.call(x) === booleanTag;
+export const isString = x => toString.call(x) === stringTag;
+export const isFunction = x => toString.call(x) === functionTag;
+export const isDate = x => toString.call(x) === dateTag;
+export const isError = x => toString.call(x) === errorTag;
+export const isSymbol = x => toString.call(x) === symbolTag;
 export const isArray = Array.isArray;
+export const isTypedArray = x => reTypedArrayTag.test(toString.call(x));
 export const map = Array.prototype.map.call.bind(Array.prototype.map);
 export const reduce = Array.prototype.reduce.call.bind(Array.prototype.reduce);
 export const reduceRight = Array.prototype.reduceRight.call.bind(Array.prototype.reduceRight);
@@ -163,7 +179,7 @@ export const findLastIndex = (array, predicate = identity, fromIndex = array.len
 
 export const reject = (array, predicate = identity) => {
 	let result = [];
-	for (let idx = fromIndex; idx > 0; idx--) {
+	for (let idx = array.length - 1; idx > 0; idx--) {
 		const item = array[idx];
 		if (!predicate(item, idx, array)) {
 			result.push(idx);
@@ -173,7 +189,7 @@ export const reject = (array, predicate = identity) => {
 };
 
 export const forEachRight = (array, iteratee) => {
-	for (let idx = fromIndex; idx > 0; idx--) {
+	for (let idx = array.length - 1; idx > 0; idx--) {
 		const item = array[idx];
 		iteratee(item, idx, array);
 	}
@@ -216,7 +232,7 @@ export const flattenDepth1 = list => {
 export const isEmpty = obj => {
 	return (
 		obj == null ||
-		(typeof obj === 'object' && Object.keys(obj).length === 0) ||
+		(typeof obj === objectType && Object.keys(obj).length === 0) ||
 		(typeof obj === 'string' && obj.length === 0)
 	);
 };
@@ -398,23 +414,39 @@ export const objectValues = obj => Object.keys(obj).map(key => obj[key]);
 
 export const contains = (arr, pItem) => some(arr, item => item === pItem);
 
-export const equals = (obj1, obj2) => {
-	if (typeof obj1 !== 'object' || typeof obj2 !== 'object') {
-		return obj1 === obj2;
-	}
-	if (toString.call(obj1) !== toString.call(obj2)) {
+export const equals = (val1, val2) => {
+	if (typeof val1 !== typeof val2) return false;
+	const val1Tag = toString.call(val1);
+	const val2Tag = toString.call(val2);
+	if (val1Tag !== val2Tag) {
 		return false;
 	}
-	for (const p in obj1) {
-		if (!(p in obj2)) {
+	switch (val1Tag) {
+		case numberTag:
+			return +val1 === +val2 || (root.isNaN(val1) && root.isNaN(val2));
+		case booleanTag:
+		case dateTag:
+			return +val1 === +val2;
+		case stringTag:
+		case regExpTag:
+		case errorTag:
+			return '' + val1 === '' + val2;
+		case symbolTag:
+			return Symbol.prototype.valueOf.call(val1) === Symbol.prototype.valueOf.call(val2);
+	}
+	if (typeof val1 !== objectType || typeof val2 !== objectType) {
+		return val1 === val2;
+	}
+	for (const p in val1) {
+		if (!(p in val2)) {
 			return false;
 		}
-		if (!equals(obj1[p], obj2[p])) {
+		if (!equals(val1[p], val2[p])) {
 			return false;
 		}
 	}
-	for (const p in obj2) {
-		if (!(p in obj1)) {
+	for (const p in val2) {
+		if (!(p in val1)) {
 			return false;
 		}
 	}
@@ -422,13 +454,13 @@ export const equals = (obj1, obj2) => {
 };
 
 export const isObject = val => {
-	return val !== null && (typeof val === 'object' || typeof val === 'function');
+	return val !== null && (typeof val === objectType || typeof val === 'function');
 };
 
 const getPathArray = path => {
 	if (isArray(path))
 		return path;
-	pathArray = path.split('.');
+	let pathArray = path.split('.');
 	for (let i = pathArray.length - 1; i >= 0; i--) {
 		for (;;) {
 			const elem = pathArray[i];
@@ -443,7 +475,7 @@ const getPathArray = path => {
 		}
 	}
 	return pathArray;
-}
+};
 
 export const get = (obj, path, defaultValue) => {
 	if (obj == null) return defaultValue;
@@ -452,7 +484,7 @@ export const get = (obj, path, defaultValue) => {
 	let currObj = obj;
 	for (const elem of pathArray) {
 		if (currObj == null) return defaultValue;
-		if (typeof currObj !== 'object' && typeof currObj !== 'function')
+		if (typeof currObj !== objectType && typeof currObj !== functionType)
 			throw new Error('get(): Cannot get property of non-object.');
 		if (elem == null)
 			throw new Error('get(): ' + nilPathElemErrorStr);
@@ -511,7 +543,7 @@ export const clone = value => {
 		result[key] = value[key];
 	}
 	return result;
-}
+};
 
 export const cloneDeep = value => {
 	if (!isObject(value))
@@ -521,7 +553,7 @@ export const cloneDeep = value => {
 		result[key] = cloneDeep(value[key]);
 	}
 	return result;
-}
+};
 
 // export const pick = (obj, paths) => {
 
@@ -571,7 +603,7 @@ export const inRange = (number, start, end = 0) => {
 		end = tmp;
 	}
 	return number >= start && number < end;
-}
+};
 
 export const random = (...args) => {
 	const lastArg = last(args);
