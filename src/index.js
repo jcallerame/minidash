@@ -191,10 +191,10 @@ export const reject = (array, predicate = identity) => {
 	return result;
 };
 
-export const forEachRight = (array, iteratee) => {
+export const forEachRight = (array, iteratee, thisArg) => {
 	for (let idx = array.length - 1; idx > 0; idx--) {
 		const item = array[idx];
-		iteratee(item, idx, array);
+		iteratee.call(thisArg, item, idx, array);
 	}
 };
 
