@@ -50,8 +50,8 @@ export const lastIndexOf = Array.prototype.lastIndexOf.call.bind(Array.prototype
 export const slice = Array.prototype.slice.call.bind(Array.prototype.slice);
 export const reverse = Array.prototype.reverse.call.bind(Array.prototype.reverse);
 export const join = Array.prototype.join.call.bind(Array.prototype.join);
-export const min = array => Math.min.apply(Math, array);
-export const max = array => Math.max.apply(Math, array);
+export const min = list => Math.min.apply(Math, list);
+export const max = list => Math.max.apply(Math, list);
 export const hasOwnProperty = Object.prototype.hasOwnProperty.call.bind(Object.prototype.hasOwnProperty);
 
 const getIterateeFunc = iteratee => {
@@ -88,12 +88,12 @@ export const maxBy = (list, iteratee = identity) => {
 	return maxElem;
 };
 
-export const multiGroupBy = (array, groups = [identity]) => {
+export const multiGroupBy = (list, groups = [identity]) => {
 	const groupFuncs = groups.map(group =>
 		getIterateeFunc(group)
 	);
 	let result = {};
-	for (const item of array) {
+	for (const item of list) {
 		let workingObj = result;
 		const numGroups = groupFuncs.length;
 		for (let i = 0; i < numGroups; i++) {
@@ -104,28 +104,28 @@ export const multiGroupBy = (array, groups = [identity]) => {
 			}
 			workingObj = workingObj[key];
 		}
-		// obj is an array now.
+		// workingObj is an list now.
 		workingObj.push(item);
 	}
 	return result;
 };
 
-export const groupBy = (array, group = identity) => multiGroupBy(array, [group]);
+export const groupBy = (list, group = identity) => multiGroupBy(list, [group]);
 
-export const keyBy = (array, iteratee) => {
+export const keyBy = (list, iteratee) => {
 	const func = getIterateeFunc(iteratee);
 	let result = {};
-	for (const item of array) {
+	for (const item of list) {
 		let key = func(item);
 		result[key] = item;
 	}
 	return result;
 };
 
-export const countBy = (array, iteratee = identity) => {
+export const countBy = (list, iteratee = identity) => {
 	const func = getIterateeFunc(iteratee);
 	let result = {};
-	for (const item of array) {
+	for (const item of list) {
 		let key = func(item);
 		const oldCount = result[key];
 		result[key] = (oldCount === undefined) ? 1 : oldCount + 1;
@@ -133,75 +133,75 @@ export const countBy = (array, iteratee = identity) => {
 	return result;
 };
 
-export const sum = array => {
-	return reduce(array, (acc, val = 0) => acc + val);
+export const sum = list => {
+	return reduce(list, (acc, val = 0) => acc + val);
 };
 
-export const sumBy = (array, iteratee = identity) => {
+export const sumBy = (list, iteratee = identity) => {
 	const func = getIterateeFunc(iteratee);
-	return sum(map(array, func));
+	return sum(map(list, func));
 };
 
-export const find = (array, predicate = identity, fromIndex = 0) => {
-	for (let idx = fromIndex; idx < array.length; idx++) {
-		const item = array[idx];
-		if (predicate(item, idx, array)) {
+export const find = (list, predicate = identity, fromIndex = 0) => {
+	for (let idx = fromIndex; idx < list.length; idx++) {
+		const item = list[idx];
+		if (predicate(item, idx, list)) {
 			return item;
 		}
 	}
 	return undefined;
 };
 
-export const findIndex = (array, predicate = identity, fromIndex = 0) => {
-	for (let idx = fromIndex; idx < array.length; idx++) {
-		const item = array[idx];
-		if (predicate(item, idx, array)) {
+export const findIndex = (list, predicate = identity, fromIndex = 0) => {
+	for (let idx = fromIndex; idx < list.length; idx++) {
+		const item = list[idx];
+		if (predicate(item, idx, list)) {
 			return idx;
 		}
 	}
 	return undefined;
 };
 
-export const findLast = (array, predicate = identity, fromIndex = array.length - 1) => {
+export const findLast = (list, predicate = identity, fromIndex = list.length - 1) => {
 	for (let idx = fromIndex; idx > 0; idx--) {
-		const item = array[idx];
-		if (predicate(item, idx, array)) {
+		const item = list[idx];
+		if (predicate(item, idx, list)) {
 			return item;
 		}
 	}
 	return undefined;
 };
 
-export const findLastIndex = (array, predicate = identity, fromIndex = array.length - 1) => {
+export const findLastIndex = (list, predicate = identity, fromIndex = list.length - 1) => {
 	for (let idx = fromIndex; idx > 0; idx--) {
-		const item = array[idx];
-		if (predicate(item, idx, array)) {
+		const item = list[idx];
+		if (predicate(item, idx, list)) {
 			return idx;
 		}
 	}
 	return undefined;
 };
 
-export const reject = (array, predicate = identity) => {
+export const reject = (list, predicate = identity) => {
 	let result = [];
-	for (let idx = array.length - 1; idx > 0; idx--) {
-		const item = array[idx];
-		if (!predicate(item, idx, array)) {
+	for (let idx = list.length - 1; idx > 0; idx--) {
+		const item = list[idx];
+		if (!predicate(item, idx, list)) {
 			result.push(idx);
 		}
 	}
 	return result;
 };
 
-export const forEachRight = (array, iteratee, thisArg) => {
-	for (let idx = array.length - 1; idx > 0; idx--) {
-		const item = array[idx];
-		iteratee.call(thisArg, item, idx, array);
+export const forEachRight = (list, iteratee, thisArg) => {
+	for (let idx = list.length - 1; idx > 0; idx--) {
+		const item = list[idx];
+		iteratee.call(thisArg, item, idx, list);
 	}
 };
 
-const _flatten2 = (obj, array) => {
-	for (const item of array) {
+const _flatten2 = (obj, list) => {
+	for (const item of list) {
 		if (isArray(item) || 
 				item instanceof HTMLCollection || 
 				item instanceof NodeList) {
@@ -212,9 +212,9 @@ const _flatten2 = (obj, array) => {
 	}
 };
 
-export const flatten = array => {
+export const flatten = list => {
 	let result = [];
-	_flatten2(result, array);
+	_flatten2(result, list);
 	return result;
 };
 
@@ -242,23 +242,23 @@ export const isEmpty = obj => {
 	);
 };
 
-export const nth = (array, pos) => {
-	return pos >= 0 ? array[pos] : array[array.length - pos];
+export const nth = (list, pos) => {
+	return pos >= 0 ? list[pos] : list[list.length - pos];
 };
 
-export const first = array => array[0];
+export const first = list => list[0];
 
-export const rest = array => slice(array, 1);
+export const rest = list => slice(list, 1);
 
-export const head = (array, n = 1) => slice(array, 0, n);
+export const head = (list, n = 1) => slice(list, 0, n);
 
-export const tail = (array, n = 1) => slice(array, -n);
+export const tail = (list, n = 1) => slice(list, -n);
 
-export const last = array => array[array.length - 1];
+export const last = list => list[list.length - 1];
 
-const makeObj = array => {
+const makeObj = list => {
 	const result = {};
-	for (const item of array) {
+	for (const item of list) {
 		result[item] = true;
 	}
 	return result;
@@ -362,30 +362,30 @@ export const pullAt = (array, ...rest) => {
 	}
 };
 
-export const without = (array, ...values) => {
+export const without = (list, ...values) => {
 	const set = makeObj(values);
-	return filter(array, item => !(set[item]));
+	return filter(list, item => !(set[item]));
 };
 
-// Remove (and return) elements from array for which predicate returns
+// Remove (and return) elements from list for which predicate returns
 // a truthy value.
-export const remove = (array, predicate = identity) => {
+export const remove = (list, predicate = identity) => {
 	const result = [];
-	for (let i = array.length - 1; i >= 0; i--) {
-		if (predicate(array[i])) {
-			result.unshift(array.splice(i, 1));
+	for (let i = list.length - 1; i >= 0; i--) {
+		if (predicate(list[i])) {
+			result.unshift(list.splice(i, 1));
 		}
 	}
 	return result;
 };
 
-export const chunk = (array, size = 1) => {
+export const chunk = (list, size = 1) => {
 	if (size < 1) {
 		throw new Error('chunk(): size argument must be at least 1.');
 	}
 	const result = [];
-	for (let i = 0; i < array.length; i += size) {
-		result.push(array.slice(i, i + size));
+	for (let i = 0; i < list.length; i += size) {
+		result.push(list.slice(i, i + size));
 	}
 	return result;
 };
@@ -661,10 +661,10 @@ export const isNaN = x => isNumber(x) && root.isNaN(x);
 
 export const castArray = x => isArray(x) ? x : [x];
 
-export const mean = array => sum(array) / array.length;
+export const mean = list => sum(list) / list.length;
 
-export const meanBy = (array, iteratee = identity) => {
-	return sumBy(array, iteratee) / array.length;
+export const meanBy = (list, iteratee = identity) => {
+	return sumBy(list, iteratee) / list.length;
 };
 
 // Returns the closest value to number that's within the inclusive
@@ -704,5 +704,17 @@ export const random = (...args) => {
 	return floating ? shifted : Math.floor(shifted);
 };
 
+export const once = func => {
+	let called = false;
+	let result;
+	return (...args) => {
+		if (!called) {
+			called = true;
+			result = func.apply(this, args);
+		}
+		return result;
+	};
+};
+
 //TODO:
-//pick/pluck
+//pluck
