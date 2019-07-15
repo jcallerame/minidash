@@ -50,6 +50,8 @@ export const lastIndexOf = Array.prototype.lastIndexOf.call.bind(Array.prototype
 export const slice = Array.prototype.slice.call.bind(Array.prototype.slice);
 export const reverse = Array.prototype.reverse.call.bind(Array.prototype.reverse);
 export const join = Array.prototype.join.call.bind(Array.prototype.join);
+export const min = array => Math.min.apply(Math, array);
+export const max = array => Math.max.apply(Math, array);
 export const hasOwnProperty = Object.prototype.hasOwnProperty.call.bind(Object.prototype.hasOwnProperty);
 
 const getIterateeFunc = iteratee => {
