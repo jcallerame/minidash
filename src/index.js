@@ -183,14 +183,7 @@ export const findLastIndex = (list, predicate = identity, fromIndex = list.lengt
 };
 
 export const reject = (list, predicate = identity) => {
-	let result = [];
-	for (let idx = list.length - 1; idx > 0; idx--) {
-		const item = list[idx];
-		if (!predicate(item, idx, list)) {
-			result.push(idx);
-		}
-	}
-	return result;
+	return filter(list, negate(predicate));
 };
 
 export const forEachRight = (list, iteratee, thisArg) => {
@@ -367,16 +360,15 @@ export const without = (list, ...values) => {
 	return filter(list, item => !(set[item]));
 };
 
-// Remove (and return) elements from list for which predicate returns
+// Remove (and return) elements from array for which predicate returns
 // a truthy value.
-export const remove = (list, predicate = identity) => {
-	const result = [];
-	for (let i = list.length - 1; i >= 0; i--) {
-		if (predicate(list[i])) {
-			result.unshift(list.splice(i, 1));
+export const remove = (array, predicate = identity) => {
+	for (let i = array.length - 1; i >= 0; i--) {
+		if (predicate(array[i])) {
+			array.splice(i, 1);
 		}
 	}
-	return result;
+	return array;
 };
 
 export const chunk = (list, size = 1) => {
@@ -703,6 +695,9 @@ export const random = (...args) => {
 	const shifted = scaled + lower;
 	return floating ? shifted : Math.floor(shifted);
 };
+
+export const negate = predicate => 
+	(...args) => !predicate.apply(this, args);
 
 export const once = func => {
 	let called = false;
