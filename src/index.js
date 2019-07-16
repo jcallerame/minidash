@@ -329,7 +329,7 @@ export const difference = (list1, ...otherLists) => {
 // differenceBy(list1, ...otherLists, [iteratee = identity])
 // Like difference, but compares values by iteratee
 export const differenceBy = (...args) => {
-	const iteratee = isArray(args[args.length - 1]) ? identity : args.pop();
+	const iteratee = isArray(last(args)) ? identity : args.pop();
 	const list1 = args.shift();
 	const set = [];
 	for (const list of args) {
@@ -349,7 +349,7 @@ export const intersection = (list1, ...otherLists) => {
 };
 
 export const intersectionBy = (...args) => {
-	const iteratee = isArray(args[args.length - 1]) ? identity : args.pop();
+	const iteratee = isArray(last(args)) ? identity : args.pop();
 	let vals = {};
 	for (const list of args) {
 		for (const item of list) {
@@ -370,7 +370,7 @@ export const intersectionBy = (...args) => {
 export const union = (...lists) => uniq(flattenDepth1(lists));
 
 export const unionBy = (...args) => {
-	const iteratee = isArray(args[args.length - 1]) ? identity : args.pop();
+	const iteratee = isArray(last(args)) ? identity : args.pop();
 	return uniqBy(flattenDepth1(args), iteratee);
 };
 
@@ -409,7 +409,7 @@ export const remove = (array, predicate = identity) => {
 };
 
 export const xorBy = (...args) => {
-	const func = isArray(args[args.length - 1]) ? identity : args.pop();
+	const func = isArray(last(args)) ? identity : args.pop();
 	const counts = countBy(flattenDepth1(args), func);
 	return map(args, list => filter(list, elem => counts[elem] === 1));
 };
@@ -616,7 +616,7 @@ export const setWith = (obj, path, value, customizer) => {
 		}
 		currObj = currObj[item];
 	}
-	currObj[pathArray[pathArray.length - 1]] = value;
+	currObj[last(pathArray)] = value;
 	return obj;
 };
 
