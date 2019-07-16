@@ -283,6 +283,43 @@ export const uniqBy = (list, iteratee) => {
 	return result;
 };
 
+// Like uniq, but optimized for and only works for sorted arrays
+export const sortedUniq = list => {
+	let lastElem;
+	let result = [];
+	for (let i = 0; i < list.length; i++) {
+		const elem = list[i];
+		if (i > 0) {
+			if (elem !== lastElem) {
+				result.push(elem);
+				lastElem = elem;
+			}
+		} else {
+			lastElem = elem;
+		}
+	}
+	return result;
+};
+
+export const sortedUniqBy = (list, iteratee = identity) => {
+	const func = getIterateeFunc(iteratee);
+	let lastVal;
+	let result = [];
+	for (let i = 0; i < list.length; i++) {
+		const elem = list[i];
+		const val = func(elem);
+		if (i > 0) {
+			if (val !== lastVal) {
+				result.push(elem);
+				lastVal = val;
+			}
+		} else {
+			lastVal = val;
+		}
+	}
+	return result;
+};
+
 // Return all items in list1 that are NOT in any of the otherLists.
 export const difference = (list1, ...otherLists) => {
 	const set = makeObj(flattenDepth1(otherLists));
