@@ -408,6 +408,14 @@ export const remove = (array, predicate = identity) => {
 	return array;
 };
 
+export const xorBy = (...args) => {
+	const func = isArray(args[args.length - 1]) ? identity : args.pop();
+	const counts = countBy(flattenDepth1(args), func);
+	return map(args, list => filter(list, elem => counts[elem] === 1));
+};
+
+export const xor = lists => xorBy(...lists, identity);
+
 export const chunk = (list, size = 1) => {
 	if (size < 1) {
 		throw new Error('chunk(): size argument must be at least 1.');
