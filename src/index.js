@@ -50,8 +50,6 @@ export const lastIndexOf = Array.prototype.lastIndexOf.call.bind(Array.prototype
 export const slice = Array.prototype.slice.call.bind(Array.prototype.slice);
 export const reverse = Array.prototype.reverse.call.bind(Array.prototype.reverse);
 export const join = Array.prototype.join.call.bind(Array.prototype.join);
-export const min = list => Math.min.apply(Math, list);
-export const max = list => Math.max.apply(Math, list);
 export const hasOwnProperty = Object.prototype.hasOwnProperty.call.bind(Object.prototype.hasOwnProperty);
 
 const getIterateeFunc = iteratee => {
@@ -74,6 +72,8 @@ export const minBy = (list, iteratee = identity) => {
 	return minElem;
 };
 
+export const min = list => minBy(list, identity);
+
 export const maxBy = (list, iteratee = identity) => {
 	const func = getIterateeFunc(iteratee);
 	let max = null;
@@ -87,6 +87,8 @@ export const maxBy = (list, iteratee = identity) => {
 	}
 	return maxElem;
 };
+
+export const max = list => maxBy(list, identity);
 
 export const multiGroupBy = (list, groups = [identity]) => {
 	const groupFuncs = groups.map(group =>
@@ -133,13 +135,29 @@ export const countBy = (list, iteratee = identity) => {
 	return result;
 };
 
-export const sum = list => {
-	return reduce(list, (acc, val = 0) => acc + val);
-};
+export const sum = list => sumBy(list, identity);
 
 export const sumBy = (list, iteratee = identity) => {
 	const func = getIterateeFunc(iteratee);
-	return sum(map(list, func));
+	let result = 0;
+	for (const item of list) {
+		const itemResult = func(item);
+		const typeTag = getTag(itemResult);
+		let numItemResult;
+		switch (typeTag) {
+			case numberTag:
+			case booleanTag:
+				numItemResult = itemResult;
+				break;
+			case stringTag:
+				numItemResult = parseInt(itemResult, 10);
+				break;
+			default:
+				numItemResult = NaN;
+		}
+		result += numItemResult;
+	}
+	return result;
 };
 
 export const find = (list, predicate = identity, fromIndex = 0) => {
@@ -320,24 +338,31 @@ export const sortedUniqBy = (list, iteratee = identity) => {
 	return result;
 };
 
+const getVals = (lists, func) => {
+	let vals = {};
+	for (const list of lists) {
+		for (const item of list) {
+			if (!(item in vals)) {
+				vals[item] = func(item);
+			}
+		}
+	}
+	return vals;
+};
+
 // Return all items in list1 that are NOT in any of the otherLists.
-export const difference = (list1, ...otherLists) => {
-	const set = makeObj(flattenDepth1(otherLists));
-	return filter(list1, item => !(set[item]));
+export const difference = (...lists) => {
+	return differenceBy(...lists, identity);
 };
 
 // differenceBy(list1, ...otherLists, [iteratee = identity])
 // Like difference, but compares values by iteratee
 export const differenceBy = (...args) => {
-	const iteratee = isArray(last(args)) ? identity : args.pop();
+	const func = isArray(last(args)) ? identity : args.pop();
 	const list1 = args.shift();
-	const set = [];
-	for (const list of args) {
-		for (const item of list) {
-			set[iteratee(item)] = true;
-		}
-	}
-	return filter(list1, item => !(set[iteratee(item)]));
+	const vals = getVals(args, func);
+	const set = makeObj(values(vals));
+	return filter(list1, item => !(set[func(item)]));
 };
 
 export const intersection = (list1, ...otherLists) => {
@@ -350,14 +375,7 @@ export const intersection = (list1, ...otherLists) => {
 
 export const intersectionBy = (...args) => {
 	const iteratee = isArray(last(args)) ? identity : args.pop();
-	let vals = {};
-	for (const list of args) {
-		for (const item of list) {
-			if (!(item in vals)) {
-				vals[item] = iteratee(item);
-			}
-		}
-	}
+	let vals = getVals(args, iteratee);
 	let sets = [];
 	const list1 = args.shift();
 	for (const list of args) {
@@ -451,10 +469,19 @@ export const fill = (array, value, start = 0, end = array.length) => {
 	}
 };
 
-// Object.values doesn't work in Tizen web widget or Tizen 3.0 web app.
-export const objectValues = obj => Object.keys(obj).map(key => obj[key]);
+export const values = obj => Object.keys(obj).map(key => obj[key]);
 
 export const contains = (arr, pItem) => some(arr, item => item === pItem);
+
+export const includes = (list, value, fromIndex = 0) => {
+	const startPos = fromIndex >= 0 ? fromIndex : list.length + fromIndex;
+	for (let i = startPos; i < list.length; i++) {
+		if (list[i] === value) {
+			return true;
+		}
+	}
+	return false;
+};
 
 export const equals = (a, b) => {
 	if (typeof val1 !== typeof val2) return false;
