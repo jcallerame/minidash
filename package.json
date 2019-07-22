@@ -1,6 +1,6 @@
 {
   "name": "minidash",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "General-purpose library similar to Lodash, but with smaller footprint.",
   "main": "lib/index.js",
   "scripts": {

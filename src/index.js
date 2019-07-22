@@ -37,12 +37,9 @@ export const isError = x => getTag(x) === errorTag;
 export const isSymbol = x => getTag(x) === symbolTag;
 export const isArray = Array.isArray;
 export const isTypedArray = x => reTypedArrayTag.test(getTag(x));
-export const map = Array.prototype.map.call.bind(Array.prototype.map);
 export const reduce = Array.prototype.reduce.call.bind(Array.prototype.reduce);
 export const reduceRight = Array.prototype.reduceRight.call.bind(Array.prototype.reduceRight);
 export const filter = Array.prototype.filter.call.bind(Array.prototype.filter);
-export const some = Array.prototype.some.call.bind(Array.prototype.some);
-export const every = Array.prototype.every.call.bind(Array.prototype);
 export const concat = Array.prototype.concat.call.bind(Array.prototype.concat);
 export const forEach = Array.prototype.forEach.call.bind(Array.prototype.forEach);
 export const indexOf = Array.prototype.indexOf.call.bind(Array.prototype.indexOf);
@@ -56,6 +53,21 @@ const getIterateeFunc = iteratee => {
 	return isString(iteratee) ? obj => obj[iteratee] : iteratee;
 };
 
+export const map = (list, iteratee = identity, thisArg) => {
+	let func = getIterateeFunc(iteratee);
+	return Array.prototype.map.call(list, func, thisArg);
+};
+
+export const some = (list, iteratee = identity, thisArg) => {
+	let func = getIterateeFunc(iteratee);
+	return Array.prototype.some.call(list, func, thisArg);
+};
+
+export const every = (list, iteratee = identity, thisArg) => {
+	let func = getIterateeFunc(iteratee);
+	return Array.prototype.every.call(list, func, thisArg);
+};
+
 // Returns the element with the minimum value of the given iteratee for that element.
 // Similar to lodash minBy function.
 export const minBy = (list, iteratee = identity) => {
@@ -63,32 +75,32 @@ export const minBy = (list, iteratee = identity) => {
 	let min = null;
 	let minElem = undefined;
 	for (const elem of list) {
-		const val = func(elem);
-		if (min === null || val < min) {
-			min = val;
+		const val = +func(elem);
+		if (!isNaN(val) && (min === null || val < min)) {
+			min = +val;
 			minElem = elem;
 		}
 	}
 	return minElem;
 };
 
-export const min = list => minBy(list, identity);
+export const min = list => isEmpty(list) ? Infinity : minBy(list, identity);
 
 export const maxBy = (list, iteratee = identity) => {
 	const func = getIterateeFunc(iteratee);
 	let max = null;
 	let maxElem = undefined;
 	for (const elem of list) {
-		const val = func(elem);
-		if (max === null || val > max) {
-			max = val;
+		const val = +func(elem);
+		if (!isNaN(val) && (max === null || val > max)) {
+			max = +val;
 			maxElem = elem;
 		}
 	}
 	return maxElem;
 };
 
-export const max = list => maxBy(list, identity);
+export const max = list => isEmpty(list) ? -Infinity : maxBy(list, identity);
 
 export const multiGroupBy = (list, groups = [identity]) => {
 	const groupFuncs = groups.map(group =>
