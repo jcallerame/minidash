@@ -918,7 +918,3 @@ export const throttle = (func, wait, options = {}) => {
     maxWait: wait,
   });
 };
-
-
-//TODO:
-//pluck
